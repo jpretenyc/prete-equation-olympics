@@ -1,0 +1,1416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prete Family Equation Olympics</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Nunito:wght@400;600;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: linear-gradient(135deg, #0a0a2e 0%, #1a1a4e 40%, #0d0d3a 100%);
+    color: #e0e0ff;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  .stars {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none; z-index: 0;
+  }
+
+  .star {
+    position: absolute;
+    background: white;
+    border-radius: 50%;
+    animation: twinkle var(--dur) ease-in-out infinite;
+  }
+
+  @keyframes twinkle {
+    0%, 100% { opacity: 0.2; }
+    50% { opacity: 1; }
+  }
+
+  #app {
+    position: relative; z-index: 1;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 8px 20px;
+  }
+
+  header {
+    text-align: center;
+    padding: 6px 0 4px;
+  }
+
+  header h1 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.6rem;
+    background: linear-gradient(90deg, #ffd700, #ff6b35, #ffd700);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shimmer 3s linear infinite;
+    text-shadow: none;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: 0% center; }
+    100% { background-position: 200% center; }
+  }
+
+  header .subtitle {
+    font-size: 0.95rem;
+    color: #8888cc;
+    margin-top: 4px;
+  }
+
+  .rings {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin: 4px 0;
+  }
+
+  .ring {
+    width: 22px; height: 22px;
+    border: 3px solid;
+    border-radius: 50%;
+    animation: ringPulse 2s ease-in-out infinite;
+  }
+
+  .ring:nth-child(1) { border-color: #0081C8; animation-delay: 0s; }
+  .ring:nth-child(2) { border-color: #000000; animation-delay: 0.2s; border-color: #555; }
+  .ring:nth-child(3) { border-color: #EE334E; animation-delay: 0.4s; }
+  .ring:nth-child(4) { border-color: #FCB131; animation-delay: 0.6s; }
+  .ring:nth-child(5) { border-color: #00A651; animation-delay: 0.8s; }
+
+  @keyframes ringPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+  }
+
+  /* SCREENS */
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* MENU */
+  #menu { text-align: center; padding-top: 20px; }
+
+  .level-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    max-width: 600px;
+    margin: 24px auto;
+  }
+
+  .level-card {
+    background: rgba(255,255,255,0.06);
+    border: 2px solid rgba(255,255,255,0.1);
+    border-radius: 16px;
+    padding: 24px 18px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .level-card:hover {
+    transform: translateY(-4px);
+    border-color: #ffd700;
+    box-shadow: 0 8px 30px rgba(255,215,0,0.15);
+  }
+
+  .level-card .medal {
+    font-size: 2.2rem;
+    margin-bottom: 8px;
+  }
+
+  .level-card h3 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.1rem;
+    color: #ffd700;
+    margin-bottom: 6px;
+  }
+
+  .level-card p {
+    font-size: 0.85rem;
+    color: #aaa;
+    line-height: 1.4;
+  }
+
+  .level-card .points-badge {
+    display: inline-block;
+    background: rgba(255,215,0,0.15);
+    color: #ffd700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    margin-top: 8px;
+    font-weight: 700;
+  }
+
+  /* GAME AREA */
+  #game { position: relative; }
+
+  .game-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .game-header .level-label {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1rem;
+    color: #ffd700;
+  }
+
+  .stats {
+    display: flex;
+    gap: 20px;
+    font-size: 0.9rem;
+  }
+
+  .stats span { color: #aaa; }
+  .stats strong { color: #ffd700; }
+
+  .graph-container {
+    position: relative;
+    background: rgba(0,0,0,0.4);
+    border: 2px solid rgba(255,255,255,0.1);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 8px;
+    max-height: 45vh;
+  }
+
+  canvas#graphCanvas {
+    display: block;
+    width: 100%;
+    max-height: 45vh;
+    cursor: crosshair;
+  }
+
+  .target-info {
+    background: rgba(255,255,255,0.05);
+    border-radius: 8px;
+    padding: 6px 12px;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .target-info .label {
+    font-size: 0.85rem;
+    color: #aaa;
+  }
+
+  .target-dot {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255,107,53,0.15);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.85rem;
+    color: #ff6b35;
+  }
+
+  .target-dot .dot-icon {
+    width: 10px; height: 10px;
+    background: #ff6b35;
+    border-radius: 50%;
+    box-shadow: 0 0 8px #ff6b35;
+  }
+
+  .input-area {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 6px;
+    align-items: stretch;
+  }
+
+  .eq-prefix {
+    display: flex;
+    align-items: center;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.2rem;
+    color: #ffd700;
+    padding: 0 4px;
+  }
+
+  #equationInput {
+    flex: 1;
+    background: rgba(255,255,255,0.08);
+    border: 2px solid rgba(255,255,255,0.15);
+    border-radius: 10px;
+    padding: 8px 14px;
+    color: #fff;
+    font-size: 1.1rem;
+    font-family: 'Nunito', monospace;
+    outline: none;
+    transition: border-color 0.3s;
+  }
+
+  #equationInput:focus {
+    border-color: #ffd700;
+  }
+
+  #equationInput::placeholder {
+    color: #555;
+  }
+
+  .btn {
+    padding: 8px 22px;
+    border: none;
+    border-radius: 10px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 700;
+  }
+
+  .btn:hover { transform: translateY(-2px); }
+
+  .btn-gold {
+    background: linear-gradient(135deg, #ffd700, #ff8c00);
+    color: #1a1a2e;
+  }
+
+  .btn-next-round {
+    display: none;
+    margin: 8px auto 0;
+    padding: 10px 36px;
+    font-size: 1rem;
+    font-family: 'Orbitron', sans-serif;
+    background: linear-gradient(135deg, #00e676, #00c853);
+    color: #1a1a2e;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    font-weight: 700;
+    box-shadow: 0 0 20px rgba(0,230,118,0.4);
+    animation: nextPulse 1.5s ease-in-out infinite;
+  }
+
+  .btn-next-round:hover {
+    background: linear-gradient(135deg, #69f0ae, #00e676);
+    box-shadow: 0 0 30px rgba(0,230,118,0.6);
+    transform: scale(1.05);
+  }
+
+  @keyframes nextPulse {
+    0%, 100% { box-shadow: 0 0 20px rgba(0,230,118,0.4); }
+    50% { box-shadow: 0 0 35px rgba(0,230,118,0.7); }
+  }
+
+  .btn-next-round.show-results {
+    background: linear-gradient(135deg, #ffd700, #ff8c00);
+    box-shadow: 0 0 20px rgba(255,215,0,0.4);
+    animation: nextPulse2 1.5s ease-in-out infinite;
+  }
+
+  @keyframes nextPulse2 {
+    0%, 100% { box-shadow: 0 0 20px rgba(255,215,0,0.4); }
+    50% { box-shadow: 0 0 35px rgba(255,215,0,0.7); }
+  }
+
+  .btn-outline {
+    background: transparent;
+    border: 2px solid rgba(255,255,255,0.2);
+    color: #ccc;
+  }
+
+  .btn-outline:hover {
+    border-color: #ffd700;
+    color: #ffd700;
+  }
+
+  .btn-sm {
+    padding: 5px 14px;
+    font-size: 0.75rem;
+  }
+
+  .action-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .hint-area {
+    margin-top: 6px;
+    padding: 8px;
+    background: rgba(0,129,200,0.1);
+    border: 1px solid rgba(0,129,200,0.3);
+    border-radius: 8px;
+    font-size: 0.85rem;
+    color: #88bbff;
+    display: none;
+  }
+
+  .hint-area.show { display: block; }
+
+  .feedback {
+    text-align: center;
+    padding: 10px;
+    border-radius: 8px;
+    margin-top: 6px;
+    font-size: 0.95rem;
+    display: none;
+  }
+
+  .feedback.show { display: block; }
+
+  .feedback.success {
+    background: rgba(0,166,81,0.15);
+    border: 1px solid rgba(0,166,81,0.4);
+    color: #44ee88;
+  }
+
+  .feedback.partial {
+    background: rgba(252,177,49,0.15);
+    border: 1px solid rgba(252,177,49,0.4);
+    color: #FCB131;
+  }
+
+  .feedback.fail {
+    background: rgba(238,51,78,0.15);
+    border: 1px solid rgba(238,51,78,0.4);
+    color: #ff6688;
+  }
+
+  .formula-help {
+    margin-top: 8px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 8px;
+    padding: 8px 14px;
+  }
+
+  .formula-help summary {
+    cursor: pointer;
+    color: #888;
+    font-size: 0.85rem;
+  }
+
+  .formula-help .help-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 6px;
+    margin-top: 10px;
+  }
+
+  .formula-help code {
+    background: rgba(255,255,255,0.08);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    color: #aaddff;
+  }
+
+  .formula-help .help-item {
+    font-size: 0.8rem;
+    color: #999;
+  }
+
+  /* RESULTS */
+  #results { text-align: center; padding-top: 30px; }
+
+  .trophy { font-size: 5rem; margin-bottom: 12px; }
+
+  .final-score {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 3rem;
+    color: #ffd700;
+    margin: 10px 0;
+  }
+
+  .score-breakdown {
+    max-width: 400px;
+    margin: 20px auto;
+    text-align: left;
+  }
+
+  .score-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    font-size: 0.9rem;
+  }
+
+  .score-row .pts { color: #ffd700; font-weight: 700; }
+
+  /* CONFETTI */
+  .confetti-piece {
+    position: fixed;
+    width: 10px; height: 10px;
+    z-index: 1000;
+    pointer-events: none;
+    animation: confettiFall var(--fall-dur) linear forwards;
+  }
+
+  @keyframes confettiFall {
+    0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+  }
+
+  /* HIT PARTICLES */
+  @keyframes particleBurst {
+    0% { transform: translate(0,0) scale(1); opacity: 1; }
+    100% { transform: translate(var(--dx), var(--dy)) scale(0); opacity: 0; }
+  }
+
+  .particle {
+    position: absolute;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    pointer-events: none;
+    animation: particleBurst 0.8s ease-out forwards;
+  }
+
+  /* Round counter */
+  .round-counter {
+    font-size: 0.85rem;
+    color: #888;
+  }
+
+  .round-counter strong { color: #ffd700; }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    header h1 { font-size: 1.5rem; }
+    .level-grid { grid-template-columns: 1fr; }
+    .input-area { flex-direction: column; }
+    .eq-prefix { justify-content: center; }
+  }
+</style>
+</head>
+<body>
+
+<div class="stars" id="stars"></div>
+
+<div id="app">
+  <header>
+    <div class="rings">
+      <div class="ring"></div><div class="ring"></div><div class="ring"></div><div class="ring"></div><div class="ring"></div>
+    </div>
+    <h1>PRETE FAMILY EQUATION OLYMPICS</h1>
+    <p class="subtitle">Write equations. Hit the dots. Win gold.</p>
+  </header>
+
+  <!-- MENU SCREEN -->
+  <div id="menu" class="screen active">
+    <p style="color:#aaa; margin-bottom: 8px;">Choose your event:</p>
+    <div class="level-grid">
+      <div class="level-card" onclick="startGame(1)">
+        <div class="medal">&#129351;</div>
+        <h3>BRONZE EVENT</h3>
+        <p>2 points &mdash; Linear equations<br><em>y = mx + b</em></p>
+        <div class="points-badge">100 pts / round</div>
+      </div>
+      <div class="level-card" onclick="startGame(2)">
+        <div class="medal">&#129352;</div>
+        <h3>SILVER EVENT</h3>
+        <p>3 points &mdash; Quadratics &amp; polynomials<br><em>y = ax&sup2; + bx + c</em></p>
+        <div class="points-badge">250 pts / round</div>
+      </div>
+      <div class="level-card" onclick="startGame(3)">
+        <div class="medal">&#129353;</div>
+        <h3>GOLD EVENT</h3>
+        <p>3&ndash;4 points &mdash; Cubics &amp; radicals<br><em>y = ax&sup3; + &hellip;</em></p>
+        <div class="points-badge">500 pts / round</div>
+      </div>
+      <div class="level-card" onclick="startGame(4)">
+        <div class="medal">&#127942;</div>
+        <h3>DIAMOND EVENT</h3>
+        <p>4&ndash;5 points &mdash; Trig, logs &amp; beyond<br><em>sin, cos, ln, abs &hellip;</em></p>
+        <div class="points-badge">1000 pts / round</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GAME SCREEN -->
+  <div id="game" class="screen">
+    <div class="game-header">
+      <div>
+        <span class="level-label" id="levelLabel">BRONZE EVENT</span>
+        <span class="round-counter">&mdash; Round <strong id="roundNum">1</strong> of <strong id="roundTotal">5</strong></span>
+      </div>
+      <div class="stats">
+        <span>Score: <strong id="scoreDisplay">0</strong></span>
+        <span>Streak: <strong id="streakDisplay">0</strong>&#128293;</span>
+      </div>
+    </div>
+
+    <div class="graph-container">
+      <canvas id="graphCanvas" width="1000" height="600"></canvas>
+    </div>
+
+    <div class="target-info" id="targetInfo"></div>
+
+    <div class="input-area">
+      <div class="eq-prefix">y =</div>
+      <input type="text" id="equationInput" placeholder="e.g. 2*x + 3  or  x^2 - 1  or  sin(x)" autocomplete="off" spellcheck="false">
+      <button class="btn btn-gold" onclick="submitEquation()">GRAPH IT</button>
+    </div>
+
+    <div class="action-row">
+      <button class="btn btn-outline btn-sm" onclick="showHint()">&#128161; Hint</button>
+      <button class="btn btn-outline btn-sm" onclick="skipRound()">&#9197; Skip</button>
+      <button class="btn btn-outline btn-sm" onclick="clearGraph()">&#128260; Clear</button>
+      <button class="btn btn-outline btn-sm" onclick="showScreen('menu')">&#127968; Menu</button>
+    </div>
+
+    <div class="hint-area" id="hintArea"></div>
+    <div class="feedback" id="feedback"></div>
+
+    <button id="nextRoundBtn" class="btn btn-next-round" onclick="advanceRound()" style="display:none;">
+      NEXT ROUND &#9654;
+    </button>
+
+    <details class="formula-help">
+      <summary>&#128218; Equation Reference Guide</summary>
+      <div class="help-grid">
+        <div class="help-item"><code>x</code> variable</div>
+        <div class="help-item"><code>2*x</code> multiply</div>
+        <div class="help-item"><code>x^2</code> exponent</div>
+        <div class="help-item"><code>x^3</code> cubic</div>
+        <div class="help-item"><code>sqrt(x)</code> square root</div>
+        <div class="help-item"><code>abs(x)</code> absolute value</div>
+        <div class="help-item"><code>sin(x)</code> sine</div>
+        <div class="help-item"><code>cos(x)</code> cosine</div>
+        <div class="help-item"><code>tan(x)</code> tangent</div>
+        <div class="help-item"><code>log(x)</code> log base 10</div>
+        <div class="help-item"><code>ln(x)</code> natural log</div>
+        <div class="help-item"><code>pi</code> &pi; constant</div>
+        <div class="help-item"><code>e</code> Euler's number</div>
+        <div class="help-item"><code>(x-2)*(x+3)</code> factored</div>
+      </div>
+    </details>
+  </div>
+
+  <!-- RESULTS SCREEN -->
+  <div id="results" class="screen">
+    <div class="trophy" id="trophyEmoji">&#127942;</div>
+    <h2 id="resultsTitle">Event Complete!</h2>
+    <div class="final-score" id="finalScore">0</div>
+    <p style="color:#aaa;" id="resultsSubtitle">points earned</p>
+    <div class="score-breakdown" id="scoreBreakdown"></div>
+    <div style="margin-top:24px; display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+      <button class="btn btn-gold" onclick="replayLevel()">&#128260; Play Again</button>
+      <button class="btn btn-outline" onclick="showScreen('menu')">&#127968; Choose Event</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== MATH PARSER =====
+function createEvalFn(expr) {
+  // Preprocess the expression
+  let processed = expr.trim();
+
+  // Replace common notation
+  processed = processed.replace(/\^/g, '**');
+  processed = processed.replace(/ln\(/g, 'Math.log(');
+  processed = processed.replace(/log\(/g, '(Math.log10||function(v){return Math.log(v)/Math.LN10})(');
+  processed = processed.replace(/sqrt\(/g, 'Math.sqrt(');
+  processed = processed.replace(/abs\(/g, 'Math.abs(');
+  processed = processed.replace(/sin\(/g, 'Math.sin(');
+  processed = processed.replace(/cos\(/g, 'Math.cos(');
+  processed = processed.replace(/tan\(/g, 'Math.tan(');
+  processed = processed.replace(/asin\(/g, 'Math.asin(');
+  processed = processed.replace(/acos\(/g, 'Math.acos(');
+  processed = processed.replace(/atan\(/g, 'Math.atan(');
+  processed = processed.replace(/ceil\(/g, 'Math.ceil(');
+  processed = processed.replace(/floor\(/g, 'Math.floor(');
+  processed = processed.replace(/round\(/g, 'Math.round(');
+  processed = processed.replace(/max\(/g, 'Math.max(');
+  processed = processed.replace(/min\(/g, 'Math.min(');
+  processed = processed.replace(/\bpi\b/g, 'Math.PI');
+  processed = processed.replace(/\be\b/g, 'Math.E');
+
+  // Insert multiplication: 2x -> 2*x, 3( -> 3*(, )( -> )*(, )x -> )*x, x( -> x*(
+  processed = processed.replace(/(\d)([a-zA-Z(])/g, '$1*$2');
+  processed = processed.replace(/(\))(\()/g, '$1*$2');
+  processed = processed.replace(/(\))([a-zA-Z])/g, '$1*$2');
+  // Don't add * inside Math.xxx
+  // Fix Math . issues from above replacements
+  processed = processed.replace(/M\*a\*t\*h/g, 'Math');
+
+  try {
+    const fn = new Function('x', '"use strict"; return (' + processed + ');');
+    // Test it
+    fn(1);
+    return fn;
+  } catch(e) {
+    return null;
+  }
+}
+
+// ===== GAME STATE =====
+const ROUNDS_PER_LEVEL = 5;
+const TOLERANCE_BASE = 0.35;
+
+let state = {
+  level: 1,
+  round: 1,
+  score: 0,
+  streak: 0,
+  points: [],
+  roundScores: [],
+  attempts: 0,
+  hintUsed: false,
+  currentFn: null,
+  animating: false
+};
+
+// ===== CANVAS SETUP =====
+const canvas = document.getElementById('graphCanvas');
+const ctx = canvas.getContext('2d');
+let W, H;
+let graphRange = { xMin: -10, xMax: 10, yMin: -8, yMax: 8 };
+
+function resizeCanvas() {
+  const container = canvas.parentElement;
+  const w = container.clientWidth;
+  const h = Math.min(w * 0.6, 500);
+  canvas.style.height = h + 'px';
+  canvas.width = w * 2;
+  canvas.height = h * 2;
+  W = canvas.width;
+  H = canvas.height;
+}
+
+function graphToCanvas(gx, gy) {
+  const px = ((gx - graphRange.xMin) / (graphRange.xMax - graphRange.xMin)) * W;
+  const py = H - ((gy - graphRange.yMin) / (graphRange.yMax - graphRange.yMin)) * H;
+  return [px, py];
+}
+
+function canvasToGraph(px, py) {
+  const gx = (px / W) * (graphRange.xMax - graphRange.xMin) + graphRange.xMin;
+  const gy = ((H - py) / H) * (graphRange.yMax - graphRange.yMin) + graphRange.yMin;
+  return [gx, gy];
+}
+
+// ===== DRAWING =====
+function drawGrid() {
+  ctx.clearRect(0, 0, W, H);
+
+  // Background
+  ctx.fillStyle = '#0a0a1a';
+  ctx.fillRect(0, 0, W, H);
+
+  // Grid lines
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+  ctx.lineWidth = 1;
+
+  for (let x = Math.ceil(graphRange.xMin); x <= graphRange.xMax; x++) {
+    const [px] = graphToCanvas(x, 0);
+    ctx.beginPath();
+    ctx.moveTo(px, 0);
+    ctx.lineTo(px, H);
+    ctx.stroke();
+  }
+
+  for (let y = Math.ceil(graphRange.yMin); y <= graphRange.yMax; y++) {
+    const [, py] = graphToCanvas(0, y);
+    ctx.beginPath();
+    ctx.moveTo(0, py);
+    ctx.lineTo(W, py);
+    ctx.stroke();
+  }
+
+  // Axes
+  ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+  ctx.lineWidth = 2;
+
+  const [originX, originY] = graphToCanvas(0, 0);
+
+  ctx.beginPath();
+  ctx.moveTo(0, originY);
+  ctx.lineTo(W, originY);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(originX, 0);
+  ctx.lineTo(originX, H);
+  ctx.stroke();
+
+  // Axis labels
+  ctx.fillStyle = 'rgba(255,255,255,0.3)';
+  ctx.font = `${Math.max(18, W/55)}px Nunito`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'top';
+
+  for (let x = Math.ceil(graphRange.xMin); x <= graphRange.xMax; x++) {
+    if (x === 0) continue;
+    const [px] = graphToCanvas(x, 0);
+    ctx.fillText(x, px, originY + 4);
+  }
+
+  ctx.textAlign = 'right';
+  ctx.textBaseline = 'middle';
+  for (let y = Math.ceil(graphRange.yMin); y <= graphRange.yMax; y++) {
+    if (y === 0) continue;
+    const [, py] = graphToCanvas(0, y);
+    ctx.fillText(y, originX - 8, py);
+  }
+}
+
+function drawPoints(points, hitSet) {
+  const r = Math.max(10, W / 70);
+
+  points.forEach((p, i) => {
+    const [cx, cy] = graphToCanvas(p.x, p.y);
+    const isHit = hitSet && hitSet.has(i);
+
+    // Glow
+    const gradient = ctx.createRadialGradient(cx, cy, 0, cx, cy, r * 3);
+    if (isHit) {
+      gradient.addColorStop(0, 'rgba(0,255,100,0.4)');
+      gradient.addColorStop(1, 'rgba(0,255,100,0)');
+    } else {
+      gradient.addColorStop(0, 'rgba(255,107,53,0.4)');
+      gradient.addColorStop(1, 'rgba(255,107,53,0)');
+    }
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r * 3, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Dot
+    ctx.fillStyle = isHit ? '#44ff88' : '#ff6b35';
+    ctx.shadowColor = isHit ? '#44ff88' : '#ff6b35';
+    ctx.shadowBlur = 15;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Label
+    ctx.fillStyle = '#fff';
+    ctx.font = `bold ${Math.max(16, W/50)}px Orbitron`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText(`(${p.x}, ${p.y})`, cx, cy - r - 8);
+  });
+}
+
+function drawEquation(fn, color, animProgress) {
+  if (!fn) return;
+  ctx.strokeStyle = color || '#00d4ff';
+  ctx.lineWidth = 3;
+  ctx.shadowColor = color || '#00d4ff';
+  ctx.shadowBlur = 8;
+  ctx.beginPath();
+
+  const steps = W;
+  const maxX = animProgress !== undefined
+    ? graphRange.xMin + (graphRange.xMax - graphRange.xMin) * animProgress
+    : graphRange.xMax;
+
+  let started = false;
+  for (let i = 0; i <= steps; i++) {
+    const gx = graphRange.xMin + (maxX - graphRange.xMin) * (i / steps);
+    try {
+      const gy = fn(gx);
+      if (!isFinite(gy) || Math.abs(gy) > 100) {
+        started = false;
+        continue;
+      }
+      const [px, py] = graphToCanvas(gx, gy);
+      if (!started) {
+        ctx.moveTo(px, py);
+        started = true;
+      } else {
+        ctx.lineTo(px, py);
+      }
+    } catch {
+      started = false;
+    }
+  }
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+}
+
+// ===== POINT GENERATION =====
+function generatePoints(level) {
+  let pts = [];
+  switch(level) {
+    case 1: {
+      // 2 points that form a nice line
+      const x1 = randInt(-6, -1);
+      const x2 = randInt(1, 6);
+      const m = randChoice([-3,-2,-1,-0.5,0.5,1,2,3]);
+      const b = randInt(-4, 4);
+      pts = [
+        { x: x1, y: roundN(m * x1 + b, 1) },
+        { x: x2, y: roundN(m * x2 + b, 1) }
+      ];
+      // Make sure y values are in range
+      pts = pts.map(p => ({ x: p.x, y: clamp(Math.round(p.y), -7, 7) }));
+      break;
+    }
+    case 2: {
+      // 3 points on a quadratic
+      const a = randChoice([-2,-1,-0.5,0.5,1,2]);
+      const h = randInt(-3, 3);
+      const k = randInt(-4, 4);
+      const xs = pickDistinct([-5,-4,-3,-2,-1,0,1,2,3,4,5], 3);
+      xs.sort((a,b) => a-b);
+      pts = xs.map(x => ({
+        x,
+        y: clamp(Math.round(a * (x-h)**2 + k), -7, 7)
+      }));
+      break;
+    }
+    case 3: {
+      // 3-4 points on a cubic or polynomial
+      const numPts = randChoice([3, 4]);
+      const a = randChoice([-0.5, -0.25, 0.25, 0.5]);
+      const b = randChoice([-1, 0, 1]);
+      const c = randChoice([-2, -1, 0, 1, 2]);
+      const d = randInt(-3, 3);
+      const xs = pickDistinct([-5,-4,-3,-2,-1,0,1,2,3,4,5], numPts);
+      xs.sort((a,b) => a-b);
+      pts = xs.map(x => ({
+        x,
+        y: clamp(Math.round(a*x**3 + b*x**2 + c*x + d), -7, 7)
+      }));
+      break;
+    }
+    case 4: {
+      // 4-5 points, possibly needing trig/advanced
+      const type = randChoice(['trig', 'mixed', 'poly4']);
+      let numPts, fn;
+      if (type === 'trig') {
+        numPts = randChoice([4, 5]);
+        const amp = randChoice([1, 2, 3]);
+        const freq = randChoice([0.5, 1]);
+        const shift = randChoice([0, 1, -1, 2]);
+        fn = x => amp * Math.sin(freq * x) + shift;
+      } else if (type === 'mixed') {
+        numPts = 4;
+        const a = randChoice([0.5, 1, -0.5, -1]);
+        const b = randInt(-2, 2);
+        fn = x => a * x * Math.sin(x) + b;
+      } else {
+        numPts = randChoice([4, 5]);
+        const a = randChoice([-0.05, 0.05, -0.1, 0.1]);
+        const b = randChoice([-0.5, 0, 0.5]);
+        const c = randChoice([-1, 0, 1]);
+        const d = randChoice([-1, 0, 1]);
+        const e = randInt(-2, 2);
+        fn = x => a*x**4 + b*x**3 + c*x**2 + d*x + e;
+      }
+      const xs = pickDistinct([-5,-4,-3,-2,-1,0,1,2,3,4,5], numPts);
+      xs.sort((a,b) => a-b);
+      pts = xs.map(x => ({
+        x,
+        y: clamp(Math.round(fn(x)), -7, 7)
+      }));
+      break;
+    }
+  }
+
+  // Ensure no duplicate points
+  const seen = new Set();
+  pts = pts.filter(p => {
+    const key = `${p.x},${p.y}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
+  // Guarantee minimum points
+  while (pts.length < 2) {
+    pts.push({ x: randInt(-5, 5), y: randInt(-5, 5) });
+  }
+
+  return pts;
+}
+
+// ===== UTILITIES =====
+function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+function randChoice(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function roundN(v, n) { const f = 10**n; return Math.round(v * f) / f; }
+function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+function pickDistinct(arr, n) {
+  const copy = [...arr];
+  const result = [];
+  for (let i = 0; i < n && copy.length > 0; i++) {
+    const idx = Math.floor(Math.random() * copy.length);
+    result.push(copy.splice(idx, 1)[0]);
+  }
+  return result;
+}
+
+// ===== GAME LOGIC =====
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(name).classList.add('active');
+  // Hide the big header during gameplay to save vertical space
+  const hdr = document.querySelector('header');
+  if (name === 'game') {
+    hdr.style.display = 'none';
+  } else {
+    hdr.style.display = '';
+  }
+}
+
+function startGame(level) {
+  state.level = level;
+  state.round = 1;
+  state.score = 0;
+  state.streak = 0;
+  state.roundScores = [];
+  showScreen('game');
+  setupRound();
+}
+
+function setupRound() {
+  state.points = generatePoints(state.level);
+  state.attempts = 0;
+  state.hintUsed = false;
+  state.currentFn = null;
+  state.animating = false;
+
+  const levelNames = ['', 'BRONZE EVENT', 'SILVER EVENT', 'GOLD EVENT', 'DIAMOND EVENT'];
+  document.getElementById('levelLabel').textContent = levelNames[state.level];
+  document.getElementById('roundNum').textContent = state.round;
+  document.getElementById('roundTotal').textContent = ROUNDS_PER_LEVEL;
+  document.getElementById('scoreDisplay').textContent = state.score;
+  document.getElementById('streakDisplay').textContent = state.streak;
+  document.getElementById('equationInput').value = '';
+  document.getElementById('equationInput').disabled = false;
+  document.querySelector('.btn-gold').disabled = false;
+  document.getElementById('nextRoundBtn').style.display = 'none';
+  document.getElementById('feedback').className = 'feedback';
+  document.getElementById('feedback').style.display = 'none';
+  document.getElementById('hintArea').className = 'hint-area';
+
+  // Show target dots info
+  const info = document.getElementById('targetInfo');
+  info.innerHTML = '<span class="label">Hit these targets:</span>' +
+    state.points.map(p =>
+      `<span class="target-dot"><span class="dot-icon"></span>(${p.x}, ${p.y})</span>`
+    ).join('');
+
+  // Auto-scale graph
+  const xs = state.points.map(p => p.x);
+  const ys = state.points.map(p => p.y);
+  const pad = 3;
+  graphRange.xMin = Math.min(-8, Math.min(...xs) - pad);
+  graphRange.xMax = Math.max(8, Math.max(...xs) + pad);
+  graphRange.yMin = Math.min(-6, Math.min(...ys) - pad);
+  graphRange.yMax = Math.max(6, Math.max(...ys) + pad);
+
+  resizeCanvas();
+  drawGrid();
+  drawPoints(state.points, null);
+
+  document.getElementById('equationInput').focus();
+}
+
+function submitEquation() {
+  if (state.animating) return;
+  const input = document.getElementById('equationInput').value.trim();
+  if (!input) return;
+
+  state.attempts++;
+  const fn = createEvalFn(input);
+
+  if (!fn) {
+    showFeedback('fail', "Couldn't parse that equation. Check your syntax and try again.");
+    return;
+  }
+
+  state.currentFn = fn;
+
+  // Animate the curve drawing
+  state.animating = true;
+  let progress = 0;
+  const hitSet = new Set();
+
+  function animate() {
+    progress += 0.025;
+    if (progress > 1) progress = 1;
+
+    drawGrid();
+    drawEquation(fn, '#00d4ff', progress);
+    drawPoints(state.points, hitSet);
+
+    // Check hits during animation
+    const tolerance = getTolerance();
+    state.points.forEach((p, i) => {
+      if (hitSet.has(i)) return;
+      const currentMaxX = graphRange.xMin + (graphRange.xMax - graphRange.xMin) * progress;
+      if (p.x <= currentMaxX) {
+        try {
+          const calcY = fn(p.x);
+          if (isFinite(calcY) && Math.abs(calcY - p.y) <= tolerance) {
+            hitSet.add(i);
+            spawnParticles(p.x, p.y);
+          }
+        } catch {}
+      }
+    });
+
+    if (progress < 1) {
+      requestAnimationFrame(animate);
+    } else {
+      state.animating = false;
+      evaluateResult(fn, hitSet);
+    }
+  }
+
+  animate();
+}
+
+function getTolerance() {
+  return TOLERANCE_BASE;
+}
+
+function evaluateResult(fn, hitSet) {
+  const total = state.points.length;
+  const hits = hitSet.size;
+
+  // Calculate precision bonus
+  let precisionSum = 0;
+  state.points.forEach((p, i) => {
+    if (hitSet.has(i)) {
+      const calcY = fn(p.x);
+      const error = Math.abs(calcY - p.y);
+      precisionSum += Math.max(0, 1 - error / getTolerance());
+    }
+  });
+
+  const basePoints = [0, 100, 250, 500, 1000][state.level];
+  const hitRatio = hits / total;
+
+  if (hits === total) {
+    // Full hit!
+    const precisionBonus = Math.round((precisionSum / total) * 50);
+    const attemptPenalty = Math.max(0, (state.attempts - 1) * 15);
+    const hintPenalty = state.hintUsed ? 25 : 0;
+    const streakBonus = state.streak * 10;
+    let roundScore = Math.max(10, basePoints + precisionBonus - attemptPenalty - hintPenalty + streakBonus);
+
+    state.score += roundScore;
+    state.streak++;
+    state.roundScores.push({ round: state.round, score: roundScore, hits: total, total });
+
+    document.getElementById('scoreDisplay').textContent = state.score;
+    document.getElementById('streakDisplay').textContent = state.streak;
+
+    showFeedback('success',
+      `PERFECT! All ${total} targets hit! +${roundScore} points` +
+      (state.streak > 1 ? ` (${state.streak}x streak!)` : '') +
+      (state.attempts > 1 ? ` (-${Math.max(0,(state.attempts-1)*15)} attempt penalty)` : '')
+    );
+
+    // Fireworks
+    launchFireworks();
+
+    // Disable input, show "Next Round" button so player can study the graph
+    document.getElementById('equationInput').disabled = true;
+    document.querySelector('.btn-gold').disabled = true;
+    const nextBtn = document.getElementById('nextRoundBtn');
+    if (state.round >= ROUNDS_PER_LEVEL) {
+      nextBtn.textContent = 'SEE RESULTS \u{1F3C6}';
+      nextBtn.className = 'btn btn-next-round show-results';
+    } else {
+      nextBtn.innerHTML = 'NEXT ROUND &#9654;';
+      nextBtn.className = 'btn btn-next-round';
+    }
+    nextBtn.style.display = 'block';
+
+  } else if (hits > 0) {
+    state.streak = 0;
+    document.getElementById('streakDisplay').textContent = 0;
+    showFeedback('partial',
+      `Hit ${hits} of ${total} targets. Adjust your equation and try again!`
+    );
+  } else {
+    state.streak = 0;
+    document.getElementById('streakDisplay').textContent = 0;
+    showFeedback('fail',
+      `Missed all targets. Study the coordinates and try a different equation.`
+    );
+  }
+}
+
+function showFeedback(type, message) {
+  const el = document.getElementById('feedback');
+  el.className = `feedback show ${type}`;
+  el.style.display = 'block';
+  el.textContent = message;
+}
+
+function showHint() {
+  state.hintUsed = true;
+  const hints = [];
+
+  if (state.level === 1) {
+    const [p1, p2] = state.points;
+    const m = (p2.y - p1.y) / (p2.x - p1.x);
+    hints.push(`This is a linear equation (y = mx + b).`);
+    hints.push(`The slope between the two points is: rise/run = (${p2.y}-${p1.y})/(${p2.x}-${p1.x}) = ${roundN(m, 2)}`);
+    hints.push(`Once you have slope m, use one point to find b: b = y - mx`);
+  } else if (state.level === 2) {
+    hints.push(`Try a quadratic: y = a(x - h)^2 + k or y = ax^2 + bx + c`);
+    hints.push(`With 3 points you can solve for a, b, and c by substituting each point.`);
+    if (state.points.length >= 3) {
+      const mid = state.points[Math.floor(state.points.length/2)];
+      hints.push(`The vertex might be near (${mid.x}, ${mid.y}). Try y = a*(x - ${mid.x})^2 + ${mid.y}`);
+    }
+  } else if (state.level === 3) {
+    hints.push(`You may need a cubic: y = ax^3 + bx^2 + cx + d`);
+    hints.push(`Or try factored form using the x-values: y = a*(x - r1)*(x - r2)*(x - r3)`);
+    hints.push(`Start with a small leading coefficient like 0.25 or 0.5`);
+  } else {
+    hints.push(`Consider trig functions: y = a*sin(b*x) + c`);
+    hints.push(`Or combinations: y = a*x + b*sin(x), polynomials of degree 4+`);
+    hints.push(`You can also use abs(), sqrt(), ln(), and other functions.`);
+    hints.push(`Lagrange interpolation always works: build (x-x1)(x-x2)... terms for each point.`);
+  }
+
+  const el = document.getElementById('hintArea');
+  el.innerHTML = hints.map(h => `<div style="margin:3px 0;">&#128161; ${h}</div>`).join('');
+  el.className = 'hint-area show';
+}
+
+function advanceRound() {
+  document.getElementById('nextRoundBtn').style.display = 'none';
+  document.getElementById('equationInput').disabled = false;
+  document.querySelector('.btn-gold').disabled = false;
+  if (state.round >= ROUNDS_PER_LEVEL) {
+    showResults();
+  } else {
+    state.round++;
+    setupRound();
+  }
+}
+
+function skipRound() {
+  state.streak = 0;
+  state.roundScores.push({ round: state.round, score: 0, hits: 0, total: state.points.length, skipped: true });
+
+  if (state.round >= ROUNDS_PER_LEVEL) {
+    showResults();
+  } else {
+    state.round++;
+    setupRound();
+  }
+}
+
+function clearGraph() {
+  state.currentFn = null;
+  document.getElementById('feedback').style.display = 'none';
+  resizeCanvas();
+  drawGrid();
+  drawPoints(state.points, null);
+}
+
+function replayLevel() {
+  startGame(state.level);
+}
+
+// ===== RESULTS =====
+function showResults() {
+  showScreen('results');
+
+  const maxPossible = [0, 100, 250, 500, 1000][state.level] * ROUNDS_PER_LEVEL;
+  const pct = maxPossible > 0 ? Math.round(state.score / maxPossible * 100) : 0;
+
+  let trophy, title;
+  if (pct >= 90) { trophy = '&#127942;'; title = 'GOLD MEDAL PERFORMANCE!'; }
+  else if (pct >= 70) { trophy = '&#129352;'; title = 'SILVER MEDAL - Great Job!'; }
+  else if (pct >= 50) { trophy = '&#129351;'; title = 'BRONZE MEDAL - Nice Work!'; }
+  else { trophy = '&#127947;'; title = 'Keep Training, Olympian!'; }
+
+  document.getElementById('trophyEmoji').innerHTML = trophy;
+  document.getElementById('resultsTitle').textContent = title;
+  document.getElementById('finalScore').textContent = state.score;
+
+  const breakdown = document.getElementById('scoreBreakdown');
+  breakdown.innerHTML = state.roundScores.map(r =>
+    `<div class="score-row">
+      <span>Round ${r.round} ${r.skipped ? '(skipped)' : `- ${r.hits}/${r.total} hits`}</span>
+      <span class="pts">+${r.score}</span>
+    </div>`
+  ).join('') +
+  `<div class="score-row" style="border-top:2px solid rgba(255,215,0,0.3);margin-top:8px;padding-top:12px;">
+    <span style="font-weight:700;">Total</span>
+    <span class="pts" style="font-size:1.1rem;">${state.score}</span>
+  </div>`;
+
+  if (pct >= 70) launchConfetti();
+}
+
+// ===== PARTICLES & EFFECTS =====
+function spawnParticles(gx, gy) {
+  const [cx, cy] = graphToCanvas(gx, gy);
+  const container = canvas.parentElement;
+  const scaleX = container.clientWidth / W;
+  const scaleY = container.clientHeight / H;
+
+  const colors = ['#ffd700', '#ff6b35', '#44ff88', '#00d4ff', '#ff44aa'];
+
+  for (let i = 0; i < 16; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    const angle = (Math.PI * 2 * i) / 16;
+    const dist = 30 + Math.random() * 50;
+    p.style.cssText = `
+      left: ${cx * scaleX}px;
+      top: ${cy * scaleY}px;
+      background: ${colors[i % colors.length]};
+      --dx: ${Math.cos(angle) * dist}px;
+      --dy: ${Math.sin(angle) * dist}px;
+    `;
+    container.appendChild(p);
+    setTimeout(() => p.remove(), 800);
+  }
+}
+
+function launchFireworks() {
+  const container = canvas.parentElement;
+  const scaleX = container.clientWidth / W;
+
+  for (let burst = 0; burst < 3; burst++) {
+    setTimeout(() => {
+      const cx = (0.2 + Math.random() * 0.6) * container.clientWidth;
+      const cy = 50 + Math.random() * 100;
+      const colors = ['#ffd700', '#ff6b35', '#44ff88', '#00d4ff', '#EE334E'];
+
+      for (let i = 0; i < 24; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        const angle = (Math.PI * 2 * i) / 24;
+        const dist = 40 + Math.random() * 80;
+        p.style.cssText = `
+          left: ${cx}px; top: ${cy}px;
+          background: ${colors[i % colors.length]};
+          --dx: ${Math.cos(angle) * dist}px;
+          --dy: ${Math.sin(angle) * dist}px;
+          width: 8px; height: 8px;
+        `;
+        container.appendChild(p);
+        setTimeout(() => p.remove(), 1000);
+      }
+    }, burst * 400);
+  }
+}
+
+function launchConfetti() {
+  const colors = ['#ffd700', '#ff6b35', '#00d4ff', '#EE334E', '#00A651', '#FCB131', '#ff44aa'];
+  for (let i = 0; i < 60; i++) {
+    setTimeout(() => {
+      const piece = document.createElement('div');
+      piece.className = 'confetti-piece';
+      piece.style.cssText = `
+        left: ${Math.random() * 100}vw;
+        top: -20px;
+        background: ${colors[Math.floor(Math.random() * colors.length)]};
+        --fall-dur: ${2 + Math.random() * 2}s;
+        width: ${6 + Math.random() * 8}px;
+        height: ${6 + Math.random() * 8}px;
+        border-radius: ${Math.random() > 0.5 ? '50%' : '2px'};
+      `;
+      document.body.appendChild(piece);
+      setTimeout(() => piece.remove(), 4000);
+    }, i * 50);
+  }
+}
+
+// ===== STARS BACKGROUND =====
+function createStars() {
+  const container = document.getElementById('stars');
+  for (let i = 0; i < 80; i++) {
+    const star = document.createElement('div');
+    star.className = 'star';
+    const size = 1 + Math.random() * 2;
+    star.style.cssText = `
+      left: ${Math.random() * 100}%;
+      top: ${Math.random() * 100}%;
+      width: ${size}px;
+      height: ${size}px;
+      --dur: ${2 + Math.random() * 4}s;
+      animation-delay: ${Math.random() * 3}s;
+    `;
+    container.appendChild(star);
+  }
+}
+
+// ===== KEYBOARD =====
+document.getElementById('equationInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') submitEquation();
+});
+
+// ===== MOUSE COORDS ON CANVAS =====
+canvas.addEventListener('mousemove', e => {
+  if (state.animating) return;
+  const rect = canvas.getBoundingClientRect();
+  const px = (e.clientX - rect.left) / rect.width * W;
+  const py = (e.clientY - rect.top) / rect.height * H;
+  const [gx, gy] = canvasToGraph(px, py);
+
+  // Redraw with crosshair
+  drawGrid();
+  if (state.currentFn) drawEquation(state.currentFn, '#00d4ff');
+  drawPoints(state.points, null);
+
+  // Draw crosshair
+  ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([6, 4]);
+  ctx.beginPath();
+  ctx.moveTo(px, 0); ctx.lineTo(px, H);
+  ctx.moveTo(0, py); ctx.lineTo(W, py);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Coord label
+  ctx.fillStyle = 'rgba(255,255,255,0.6)';
+  ctx.font = `${Math.max(16, W/55)}px Nunito`;
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'bottom';
+  ctx.fillText(`(${roundN(gx,1)}, ${roundN(gy,1)})`, px + 10, py - 6);
+});
+
+canvas.addEventListener('mouseleave', () => {
+  if (state.animating) return;
+  drawGrid();
+  if (state.currentFn) drawEquation(state.currentFn, '#00d4ff');
+  drawPoints(state.points, null);
+});
+
+// ===== RESIZE HANDLER =====
+window.addEventListener('resize', () => {
+  resizeCanvas();
+  drawGrid();
+  if (state.currentFn) drawEquation(state.currentFn, '#00d4ff');
+  if (state.points.length) drawPoints(state.points, null);
+});
+
+// ===== INIT =====
+createStars();
+resizeCanvas();
+</script>
+</body>
+</html>
